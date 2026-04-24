@@ -1,0 +1,6 @@
+fastapi==0.110.0
+uvicorn==0.29.0
+sentence-transformers==2.5.1
+torch==2.2.1
+pydantic==2.6.4
+numpy<2.0.0

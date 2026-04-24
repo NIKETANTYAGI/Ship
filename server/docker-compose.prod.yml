@@ -1,0 +1,116 @@
+version: '3.8'
+
+services:
+  # Internal PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: swiftroute-postgres-prod
+    restart: always
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-swiftroute}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data_prod:/var/lib/postgresql/data
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/schema.sql
+    networks:
+      - swiftroute-prod
+
+  # Internal Redis for Caching & Queues
+  redis:
+    image: redis:7-alpine
+    container_name: swiftroute-redis-prod
+    restart: always
+    volumes:
+      - redis_data_prod:/data
+    networks:
+      - swiftroute-prod
+
+  # Internal MongoDB for Tracking Logs
+  mongodb:
+    image: mongo:6
+    container_name: swiftroute-mongodb-prod
+    restart: always
+    environment:
+      MONGO_INITDB_DATABASE: swiftroute_tracking
+    volumes:
+      - mongo_data_prod:/data/db
+    networks:
+      - swiftroute-prod
+
+  # Message Broker (Kafka)
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.4.0
+    restart: always
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+    networks:
+      - swiftroute-prod
+
+  kafka:
+    image: confluentinc/cp-kafka:7.4.0
+    restart: always
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    networks:
+      - swiftroute-prod
+
+  # AI ML Service
+  ai-embedder:
+    build:
+      context: ./src/integrations/vectors
+      dockerfile: Dockerfile
+    container_name: swiftroute-ai-embedder-prod
+    restart: always
+    networks:
+      - swiftroute-prod
+
+  # The Main Application Server
+  server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: swiftroute-app-prod
+    restart: always
+    depends_on:
+      - postgres
+      - redis
+      - kafka
+      - mongodb
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-swiftroute}
+      - REDIS_URL=redis://redis:6379
+      - KAFKA_BROKERS=kafka:29092
+      - MONGODB_URL=mongodb://mongodb:27017/swiftroute_tracking
+    networks:
+      - swiftroute-prod
+
+  # Nginx Reverse Proxy (The only service exposed to the world)
+  nginx:
+    image: nginx:alpine
+    container_name: swiftroute-nginx-prod
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - server
+    networks:
+      - swiftroute-prod
+
+networks:
+  swiftroute-prod:
+    driver: bridge
+
+volumes:
+  postgres_data_prod:
+  redis_data_prod:
+  mongo_data_prod:

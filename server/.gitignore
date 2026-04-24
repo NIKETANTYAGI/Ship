@@ -1,0 +1,13 @@
+# Environment variables - NEVER commit these
+.env
+.env.local
+
+# Firebase credentials - NEVER commit
+parcelp2p-firebase-adminsdk-fbsvc-94f89657ff.json
+
+# Node modules
+node_modules/
+
+# Build output
+dist/
+build/

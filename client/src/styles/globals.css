@@ -1,0 +1,107 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 210 20% 98%;
+    --foreground: 222 47% 11%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+
+    --primary: 24 95% 53%;
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222 47% 11%;
+
+    --accent: 210 40% 96%;
+    --accent-foreground: 222 47% 11%;
+
+    --muted: 210 40% 96%;
+    --muted-foreground: 215 16% 47%;
+
+    --error: 0 84% 60%;
+    --error-foreground: 210 40% 98%;
+
+    --ring: 24 95% 53%;
+
+    --radius: 0.75rem;
+  }
+
+  .dark {
+    --background: 230 40% 5%;
+    --foreground: 210 40% 98%;
+
+    --card: 230 40% 8%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 230 40% 5%;
+    --popover-foreground: 210 40% 98%;
+
+    --border: 230 30% 15%;
+    --input: 230 30% 15%;
+
+    --primary: 24 95% 53%;
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 230 30% 10%;
+    --secondary-foreground: 210 40% 98%;
+
+    --accent: 230 30% 15%;
+    --accent-foreground: 210 40% 98%;
+
+    --muted: 230 30% 10%;
+    --muted-foreground: 215 20% 65%;
+
+    --error: 0 63% 31%;
+    --error-foreground: 210 40% 98%;
+
+    --ring: 24 95% 53%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+@layer components {
+  .glass-card {
+    @apply bg-card/60 backdrop-blur-xl border border-border/40 shadow-sm transition-all;
+  }
+  
+  .dark .glass-card {
+    @apply bg-card/40 backdrop-blur-xl border border-white/10 shadow-[0_8px_32px_0_rgba(0,0,0,0.37)];
+  }
+
+  .premium-shadow {
+    @apply shadow-[0_20px_50px_rgba(8,_112,_184,_0.1)];
+  }
+
+  .dark .premium-shadow {
+    @apply shadow-[0_20px_50px_rgba(0,_0,_0,_0.5)];
+  }
+
+  .shimmer {
+    @apply relative overflow-hidden before:absolute before:inset-0 before:-translate-x-full before:animate-[shimmer_2s_infinite] before:bg-gradient-to-r before:from-transparent before:via-white/10 before:to-transparent;
+  }
+}
+
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
