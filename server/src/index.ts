@@ -33,7 +33,19 @@ app.use(helmet({
   contentSecurityPolicy: false, // Disable CSP for now to ensure all integrations work
 }));
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:5173', // Use env var for production
+  origin: (origin, callback) => {
+    const allowedOrigins = [
+      process.env.FRONTEND_URL,
+      'https://brilliant-kelpie-443f32.netlify.app',
+      'http://localhost:5173'
+    ].filter(Boolean);
+    
+    if (!origin || allowedOrigins.includes(origin) || allowedOrigins.includes(origin + '/')) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
 }));
 
