@@ -33,19 +33,14 @@ app.use(helmet({
   contentSecurityPolicy: false, // Disable CSP for now to ensure all integrations work
 }));
 app.use(cors({
-  origin: (origin, callback) => {
-    // Log the origin to Render logs for debugging
-    console.log('🌐 CORS Request from origin:', origin);
-    
-    // Reflect origin if it exists, or use fallback
-    if (!origin || origin.includes('netlify.app') || origin.includes('localhost')) {
-      callback(null, true);
-    } else {
-      callback(null, true); // Allow all for now to unblock
-    }
-  },
+  origin: true, // Reflect the request origin (safe for credentials)
   credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
 }));
+
+// Handle preflight requests for all routes
+app.options('*', cors() as any);
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
