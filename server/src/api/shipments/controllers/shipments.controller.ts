@@ -47,6 +47,13 @@ export const createShipment = asyncHandler(async (req: AuthenticatedRequest, res
         await setRate(pickup_address.pincode, delivery_address.pincode, weight_grams, is_cod, rates);
     }
 
+    if (!rates || !rates.couriers) {
+        return res.status(400).json({
+            success: false,
+            error: { code: 'SHIPMENT_003', message: 'No couriers available for this route' }
+        });
+    }
+
     const courierRate = rates.couriers.find(c => c.courier_id === courier_id);
     if (!courierRate) {
         return res.status(400).json({
@@ -380,7 +387,7 @@ export const bulkCreateShipments = asyncHandler(async (req: AuthenticatedRequest
             }
 
             // 2. Select cheapest courier
-            if (rates.couriers.length === 0) {
+            if (!rates || !rates.couriers || rates.couriers.length === 0) {
                 results.push({ success: false, error: 'No service available', shipment: shipReq });
                 continue;
             }

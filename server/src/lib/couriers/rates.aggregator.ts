@@ -4,6 +4,7 @@ import { getDtdcRates } from './dtdc';
 import { getXpressBeesRates } from './xpressbees';
 import { getInternationalRates } from './international';
 import db from '../../Database/db';
+import { CourierRateRequest, AggregatedRatesResult, CourierRateResponse } from './types';
 
 export async function aggregateRates(req: CourierRateRequest): Promise<AggregatedRatesResult> {
   // 1. Fetch Shiprocket rates (primary aggregator) + Direct fallbacks
