@@ -28,7 +28,10 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 
 // Base Middlewares
-app.use(helmet());
+app.use(helmet({
+  crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" },
+  contentSecurityPolicy: false, // Disable CSP for now to ensure all integrations work
+}));
 app.use(cors({
   origin: process.env.FRONTEND_URL || 'http://localhost:5173', // Use env var for production
   credentials: true,
