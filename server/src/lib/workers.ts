@@ -110,7 +110,7 @@ function createNotificationWorker() {
               break;
             }
             case 'PUSH': {
-              const { sendPushNotification } = await import('./firebase');
+              const { sendPushNotification } = await import('./notifications');
               const { title, body } = buildPushNotification(event_type, payload);
               if (payload.fcm_token) {
                 await sendPushNotification(payload.fcm_token as string, title, body, {
