@@ -14,7 +14,7 @@
 import { kafka, TOPICS } from './kafka';
 import { sendMSG91Otp } from './msg91';
 import { sendWhatsAppMessage } from './whatsapp';
-import { sendPushNotification } from './firebase';
+import { sendPushNotification } from './notifications';
 import { sendEmail } from './sendgrid';
 import db from '../Database/db';
 

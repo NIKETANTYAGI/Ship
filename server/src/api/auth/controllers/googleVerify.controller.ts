@@ -1,35 +1,41 @@
 import { Request, Response } from 'express';
-import * as admin from 'firebase-admin';
+import { OAuth2Client } from 'google-auth-library';
 import pool from '../../../Database/db';
 import redis from '../../../Database/redis';
 import { signTokens } from '../../../lib/jwt';
 
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 const REFRESH_TOKEN_KEY = (userId: string) => `refresh_token:${userId}`;
 const REFRESH_TOKEN_EXPIRY_SECONDS = 7 * 24 * 60 * 60; // 7 days
 
-export const firebaseVerify = async (req: Request, res: Response): Promise<void> => {
+export const googleVerify = async (req: Request, res: Response): Promise<void> => {
   const { idToken } = req.body;
 
   if (!idToken) {
     res.status(400).json({
       success: false,
-      error: { code: 'AUTH_008', message: 'Firebase ID Token is required' },
+      error: { code: 'AUTH_008', message: 'Google ID Token is required' },
     });
     return;
   }
 
   try {
-    // 1. Verify the Firebase Token
-    const decodedToken = await admin.auth().verifyIdToken(idToken);
-    const email = decodedToken.email;
-
-    if (!email) {
+    // 1. Verify the Google Token
+    const ticket = await client.verifyIdToken({
+      idToken: idToken,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+    const payload = ticket.getPayload();
+    
+    if (!payload || !payload.email) {
       res.status(400).json({
         success: false,
-        error: { code: 'AUTH_009', message: 'Email not found in Firebase token' },
+        error: { code: 'AUTH_009', message: 'Invalid Google token payload' },
       });
       return;
     }
+
+    const email = payload.email;
 
     // 2. Find or create user in DB
     let isNewUser = false;
@@ -56,7 +62,7 @@ export const firebaseVerify = async (req: Request, res: Response): Promise<void>
           user_id: user.id,
           event_type: 'WELCOME_USER',
           channels: ['EMAIL'],
-          payload: { name: decodedToken.name || 'User' }
+          payload: { name: payload.name || 'User' }
         });
       } catch (kafkaErr: any) {
         console.warn('⚠️ Kafka Event skipped:', kafkaErr.message);
@@ -87,12 +93,12 @@ export const firebaseVerify = async (req: Request, res: Response): Promise<void>
     });
 
   } catch (error: any) {
-    console.error('❌ Firebase Token Verification Failed:', error);
+    console.error('❌ Google Token Verification Failed:', error);
     res.status(401).json({
       success: false,
       error: {
         code: 'AUTH_010',
-        message: error.code === 'auth/id-token-expired' ? 'Token expired' : 'Invalid Firebase token' 
+        message: 'Invalid Google token' 
       },
     });
   }

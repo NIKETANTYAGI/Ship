@@ -4,7 +4,7 @@ import { verifyOtp } from '../controllers/verifyOtp.controller';
 import { refreshToken } from '../controllers/refreshToken.controller';
 import { logout } from '../controllers/logout.controller';
 import { registerUser } from '../controllers/auth.controller';
-import { firebaseVerify } from '../controllers/firebaseVerify.controller';
+import { googleVerify } from '../controllers/googleVerify.controller';
 import { authMiddleware } from '../../../middleware/auth.middleware';
 
 const router = Router();
@@ -63,12 +63,12 @@ router.post('/send-otp', sendOtp);
  */
 router.post('/verify-otp', verifyOtp);
 
-// POST /auth/firebase-verify
+// POST /auth/google-verify
 /**
  * @swagger
- * /api/auth/firebase-verify:
+ * /api/auth/google-verify:
  *   post:
- *     summary: Verify Firebase ID Token and Issue JWT
+ *     summary: Verify Google ID Token and Issue JWT
  *     tags: [Auth]
  *     requestBody:
  *       required: true
@@ -84,7 +84,7 @@ router.post('/verify-otp', verifyOtp);
  *       200:
  *         description: JWT Tokens issued
  */
-router.post('/firebase-verify', firebaseVerify);
+router.post('/google-verify', googleVerify);
 
 // POST /auth/refresh
 router.post('/refresh', refreshToken);

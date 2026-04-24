@@ -8,16 +8,22 @@ import { BookingProvider } from "./context/BookingContext";
 
 import { ThemeProvider } from "./context/ThemeContext";
 
+import { GoogleOAuthProvider } from '@react-oauth/google';
+
+const GOOGLE_CLIENT_ID = (import.meta as any).env?.VITE_GOOGLE_CLIENT_ID || '';
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <AuthProvider>
-      <ThemeProvider>
-        <BookingProvider>
-          <ToastProvider>
-            <App />
-          </ToastProvider>
-        </BookingProvider>
-      </ThemeProvider>
-    </AuthProvider>
+    <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
+      <AuthProvider>
+        <ThemeProvider>
+          <BookingProvider>
+            <ToastProvider>
+              <App />
+            </ToastProvider>
+          </BookingProvider>
+        </ThemeProvider>
+      </AuthProvider>
+    </GoogleOAuthProvider>
   </StrictMode>
 )

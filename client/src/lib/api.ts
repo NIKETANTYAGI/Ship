@@ -27,7 +27,7 @@ function getMockResponse(endpoint: string, options?: RequestInit) {
 
   if (endpoint.includes('/auth/send-otp')) return { data: { success: true } };
   if (endpoint.includes('/auth/verify-otp')) return { data: { access_token: generateMockToken('mock_otp'), user: MOCK_USER } };
-  if (endpoint.includes('/auth/google')) return { data: { access_token: generateMockToken('mock_google'), user: MOCK_USER } };
+  if (endpoint.includes('/auth/google-verify')) return { data: { access_token: generateMockToken('mock_google'), user: MOCK_USER } };
   if (endpoint.includes('/users/profile')) return { data: MOCK_USER };
   if (endpoint.includes('/users/shipments')) {
     const urlParams = new URL(endpoint.startsWith('http') ? endpoint : `http://localhost${endpoint}`).searchParams;
@@ -170,8 +170,8 @@ export async function verifyOtp(email: string, otp: string) {
   return data.data;
 }
 
-export async function verifyFirebaseToken(idToken: string) {
-  const data = await fetchAPI('/auth/firebase-verify', {
+export async function verifyGoogleToken(idToken: string) {
+  const data = await fetchAPI('/auth/google-verify', {
     method: 'POST',
     body: JSON.stringify({ idToken })
   });
