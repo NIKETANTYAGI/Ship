@@ -21,8 +21,9 @@ try {
   if (process.env.FIREBASE_SERVICE_ACCOUNT_JSON) {
     try {
       serviceAccountConfig = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_JSON);
+      console.log('✅ Firebase JSON found in environment variables');
     } catch(e) {
-      console.warn("⚠️ Invalid FIREBASE_SERVICE_ACCOUNT_JSON format mapping to JSON object.");
+      console.error("❌ Failed to parse FIREBASE_SERVICE_ACCOUNT_JSON. Ensure it is valid JSON.");
     }
   } 
 
@@ -30,21 +31,23 @@ try {
     const serviceAccountPath = path.resolve(process.cwd(), FIREBASE_SERVICE_ACCOUNT_PATH);
     if (fs.existsSync(serviceAccountPath)) {
       serviceAccountConfig = require(serviceAccountPath);
+      console.log('✅ Firebase Service Account file found locally');
     }
   }
   
   if (serviceAccountConfig) {
+    // If we have a config, we don't strictly need FIREBASE_PROJECT_ID as it is in the config
     admin.initializeApp({
       credential: admin.credential.cert(serviceAccountConfig),
-      projectId: FIREBASE_PROJECT_ID
+      projectId: FIREBASE_PROJECT_ID || serviceAccountConfig.project_id
     });
     firebaseInitialized = true;
-    console.log('🔥 Firebase Admin initialized successfully');
+    console.log('🔥 Firebase Admin initialized successfully for project:', serviceAccountConfig.project_id);
   } else {
-    console.warn(`⚠️ Firebase Service Account not found. Mock mode enabled.`);
+    console.warn(`⚠️ Firebase Service Account not found. Push notifications will run in MOCK mode.`);
   }
-} catch (error) {
-  console.warn('⚠️ Firebase Initialization Warning:', error instanceof Error ? error.message : 'Check your service account.');
+} catch (error: any) {
+  console.error('❌ Firebase Initialization Error:', error.message);
 }
 
 /**
