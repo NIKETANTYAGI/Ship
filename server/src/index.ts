@@ -32,15 +32,30 @@ app.use(helmet({
   crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" },
   contentSecurityPolicy: false, // Disable CSP for now to ensure all integrations work
 }));
-app.use(cors({
-  origin: true, // Reflect the request origin (safe for credentials)
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
-}));
+// Manual CORS Middleware (The Hammer)
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  const allowedOrigins = [
+    'https://brilliant-kelpie-443f32.netlify.app',
+    'http://localhost:5173',
+    process.env.FRONTEND_URL
+  ].filter(Boolean);
 
-// Handle preflight requests for all routes
-app.options('*', cors() as any);
+  if (origin && (allowedOrigins.includes(origin) || allowedOrigins.includes(origin + '/'))) {
+    res.header('Access-Control-Allow-Origin', origin);
+  } else if (!origin) {
+    res.header('Access-Control-Allow-Origin', '*');
+  }
+  
+  res.header('Access-Control-Allow-Credentials', 'true');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+  
+  if (req.method === 'OPTIONS') {
+    return res.status(200).send();
+  }
+  next();
+});
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
