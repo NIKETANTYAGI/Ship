@@ -1,6 +1,4 @@
 import axios from 'axios';
-import dotenv from 'dotenv';
-dotenv.config();
 
 const MSG91_AUTH_KEY = process.env.MSG91_API_KEY || '';
 const MSG91_SENDER_ID = process.env.MSG91_SENDER_ID || 'SWFTRT';

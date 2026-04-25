@@ -1,5 +1,5 @@
 import { Worker, Job } from 'bullmq';
-import { redis } from '../redis';
+import redis from '../../Database/redis';
 import db from '../../Database/db';
 import { CodPayoutJobData, enqueueCodPayout } from '../queues';
 
@@ -20,8 +20,8 @@ export const startReconciliationScanner = () => {
         SELECT s.id, s.user_id, s.cod_amount, s.awb
         FROM shipments s
         LEFT JOIN cod_collections c ON s.id = c.shipment_id
-        WHERE s.status = 'DELIVERED' 
-          AND s.cod_amount > 0 
+        WHERE s.status = 'DELIVERED'
+          AND s.cod_amount > 0
           AND c.id IS NULL
       `);
 

@@ -14,8 +14,6 @@
  */
 
 import axios from 'axios';
-import dotenv from 'dotenv';
-dotenv.config();
 
 const CASHFREE_ENV = process.env.CASHFREE_ENV || 'sandbox'; // 'sandbox' | 'production'
 const CASHFREE_BASE = CASHFREE_ENV === 'production'

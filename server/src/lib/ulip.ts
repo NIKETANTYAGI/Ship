@@ -9,9 +9,6 @@
  * Replace MOCK_MODE with real HTTP calls once credentials arrive.
  */
 
-import dotenv from 'dotenv';
-dotenv.config();
-
 const MOCK_MODE = !process.env.ULIP_TOKEN || process.env.NODE_ENV !== 'production';
 
 // ─── Types ────────────────────────────────────────────────────────────────────

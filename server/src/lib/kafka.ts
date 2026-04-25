@@ -1,6 +1,4 @@
 import { Kafka, Partitioners } from 'kafkajs';
-import dotenv from 'dotenv';
-dotenv.config();
 
 const KAFKA_BROKERS = process.env.KAFKA_BROKERS ? process.env.KAFKA_BROKERS.split(',') : ['localhost:9092'];
 

@@ -10,17 +10,23 @@
  */
 
 import { Worker, Job, Queue } from 'bullmq';
-import { redis } from './redis';
+import redis from '../Database/redis';
 import { TrackingEvent } from './mongo';
 import { TrackingPollJobData, NotificationJobData, CodPayoutJobData } from './queues';
 import { startReconciliationScanner, startCodPayoutWorker } from './workers/reconciliation.worker';
 import { startRecoveryScanner } from './workers/recovery.worker';
 
-// Lazy imports to avoid circular deps at startup
-const connection = redis;
+// ─── Suppress ECONNRESET from BullMQ's internally-duplicated Redis connections ──
+// BullMQ calls connection.duplicate() for each Queue/Worker. Those clones don't
+// inherit our error handler, so ioredis emits an 'unhandledRejection'-style
+// error event. We catch and silence the harmless network blips here.
+process.on('uncaughtException', (err: any) => {
+  if (err?.code === 'ECONNRESET' || err?.message?.includes('ECONNRESET')) return;
+  console.error('💥 Uncaught Exception:', err);
+});
 
-export const reconciliationQueue = new Queue('reconciliation-scanner', { connection });
-export const recoveryQueue = new Queue('recovery-scanner', { connection });
+// Lazy connection getter — lets BullMQ duplicate on demand
+const connection = redis;
 
 // ─── Tracking Poll Worker ─────────────────────────────────────────────────────
 
@@ -53,12 +59,12 @@ function createTrackingPollWorker() {
 
         if (!statusData) return;
 
-        await reconciliationQueue.add('scan', {}, {
-          repeat: { pattern: '0 */6 * * *' } // Run every 6 hours
+        await new Queue('reconciliation-scanner', { connection }).add('scan', {}, {
+          repeat: { pattern: '0 */6 * * *' }
         });
 
-        await recoveryQueue.add('nudge', {}, {
-          repeat: { pattern: '0 * * * *' } // Run every hour
+        await new Queue('recovery-scanner', { connection }).add('nudge', {}, {
+          repeat: { pattern: '0 * * * *' }
         });
 
         // Save to MongoDB

@@ -1,6 +1,5 @@
 import { Response } from 'express';
 import { asyncHandler } from '../../../middleware/asyncHandler';
-import dotenv from 'dotenv';
 import { generateShippingLabel } from '../../../lib/pdf-generator';
 import { AuthenticatedRequest } from '../../../middleware/auth.middleware';
 import pool from '../../../Database/db';

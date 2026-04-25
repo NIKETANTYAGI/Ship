@@ -1,7 +1,5 @@
 import { S3Client, PutObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
-import dotenv from 'dotenv';
-dotenv.config();
 
 const S3_ENDPOINT = process.env.MINIO_ENDPOINT || 'localhost';
 const S3_PORT = parseInt(process.env.MINIO_PORT || '9000');

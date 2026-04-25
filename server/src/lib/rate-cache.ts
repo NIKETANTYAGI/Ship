@@ -7,7 +7,7 @@
  * Cache Key format: rate:{pickup_pincode}:{delivery_pincode}:{weight_grams}:{is_cod}
  */
 
-import { redis } from './redis';
+import redis from '../Database/redis';
 import db from '../Database/db';
 import type { AggregatedRatesResult } from './couriers/types';
 

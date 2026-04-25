@@ -1,6 +1,4 @@
 import axios from 'axios';
-import dotenv from 'dotenv';
-dotenv.config();
 
 const DIGIO_CLIENT_ID = process.env.DIGIO_CLIENT_ID;
 const DIGIO_CLIENT_SECRET = process.env.DIGIO_CLIENT_SECRET;

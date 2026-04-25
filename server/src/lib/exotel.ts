@@ -1,7 +1,4 @@
 import axios from 'axios';
-import dotenv from 'dotenv';
-
-dotenv.config();
 
 const EXOTEL_SID = process.env.EXOTEL_SID;
 const EXOTEL_KEY = process.env.EXOTEL_KEY;

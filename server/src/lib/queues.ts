@@ -10,52 +10,71 @@
  */
 
 import { Queue, Worker, QueueEvents, Job } from 'bullmq';
-import { redis } from './redis';
+import redis from '../Database/redis';
 
 // ─── Connection Config ────────────────────────────────────────────────────────
 
 const connection = redis; // Reuse existing ioredis instance
 
-// ─── Queue Definitions ────────────────────────────────────────────────────────
+// ─── Queue Definitions (Lazy — only created when first accessed) ──────────────
+// This prevents BullMQ from opening idle Redis connections when workers are disabled.
 
-export const trackingPollQueue = new Queue('tracking-poll', {
-  connection,
-  defaultJobOptions: {
-    removeOnComplete: { count: 100 },
-    removeOnFail: { count: 50 },
-    attempts: 3,
-    backoff: { type: 'exponential', delay: 5000 },
-  },
-});
+let _trackingPollQueue: Queue | null = null;
+let _notificationQueue: Queue | null = null;
+let _codPayoutQueue: Queue | null = null;
+let _reconciliationScannerQueue: Queue | null = null;
 
-export const notificationQueue = new Queue('notification', {
-  connection,
-  defaultJobOptions: {
-    removeOnComplete: { count: 500 },
-    removeOnFail: { count: 100 },
-    attempts: 3,
-    backoff: { type: 'exponential', delay: 2000 },
-  },
-});
+const DEFAULT_JOB_OPTIONS = {
+  removeOnComplete: { count: 100 },
+  removeOnFail: { count: 50 },
+  attempts: 3,
+};
 
-export const codPayoutQueue = new Queue('cod-payout', {
-  connection,
-  defaultJobOptions: {
-    removeOnComplete: { count: 100 },
-    removeOnFail: { count: 50 },
-    attempts: 2,
-    backoff: { type: 'fixed', delay: 10000 },
-  },
-});
+export const getTrackingPollQueue = () => {
+  if (!_trackingPollQueue) {
+    _trackingPollQueue = new Queue('tracking-poll', {
+      connection,
+      defaultJobOptions: { ...DEFAULT_JOB_OPTIONS, backoff: { type: 'exponential', delay: 5000 } },
+    });
+  }
+  return _trackingPollQueue;
+};
 
-export const reconciliationScannerQueue = new Queue('reconciliation-scanner', {
-  connection,
-  defaultJobOptions: {
-    removeOnComplete: { count: 10 },
-    removeOnFail: { count: 10 },
-    attempts: 1,
-  },
-});
+export const getNotificationQueue = () => {
+  if (!_notificationQueue) {
+    _notificationQueue = new Queue('notification', {
+      connection,
+      defaultJobOptions: { ...DEFAULT_JOB_OPTIONS, removeOnComplete: { count: 500 }, removeOnFail: { count: 100 }, backoff: { type: 'exponential', delay: 2000 } },
+    });
+  }
+  return _notificationQueue;
+};
+
+export const getCodPayoutQueue = () => {
+  if (!_codPayoutQueue) {
+    _codPayoutQueue = new Queue('cod-payout', {
+      connection,
+      defaultJobOptions: { removeOnComplete: { count: 100 }, removeOnFail: { count: 50 }, attempts: 2, backoff: { type: 'fixed', delay: 10000 } },
+    });
+  }
+  return _codPayoutQueue;
+};
+
+export const getReconciliationScannerQueue = () => {
+  if (!_reconciliationScannerQueue) {
+    _reconciliationScannerQueue = new Queue('reconciliation-scanner', {
+      connection,
+      defaultJobOptions: { removeOnComplete: { count: 10 }, removeOnFail: { count: 10 }, attempts: 1 },
+    });
+  }
+  return _reconciliationScannerQueue;
+};
+
+// Backwards-compat aliases (so existing code doesn't break immediately)
+export const trackingPollQueue = { add: (name: string, data: any, opts?: any) => getTrackingPollQueue().add(name, data, opts) };
+export const notificationQueue  = { add: (name: string, data: any, opts?: any) => getNotificationQueue().add(name, data, opts) };
+export const codPayoutQueue     = { add: (name: string, data: any, opts?: any) => getCodPayoutQueue().add(name, data, opts) };
+export const reconciliationScannerQueue = { add: (name: string, data: any, opts?: any) => getReconciliationScannerQueue().add(name, data, opts) };
 
 // ─── Job Type Definitions ─────────────────────────────────────────────────────
 
@@ -145,7 +164,7 @@ export async function enqueueCodPayout(
  * Runs every 6 hours by default.
  */
 export async function startReconciliationSchedules(): Promise<void> {
-  await reconciliationScannerQueue.add(
+  await getReconciliationScannerQueue().add(
     'periodic-scan',
     {},
     {
@@ -161,12 +180,8 @@ export async function startReconciliationSchedules(): Promise<void> {
 // ─── Graceful Shutdown ────────────────────────────────────────────────────────
 
 export async function closeQueues(): Promise<void> {
-  await Promise.all([
-    trackingPollQueue.close(),
-    notificationQueue.close(),
-    codPayoutQueue.close(),
-    reconciliationScannerQueue.close(),
-  ]);
+  const queues = [_trackingPollQueue, _notificationQueue, _codPayoutQueue, _reconciliationScannerQueue].filter(Boolean);
+  await Promise.all(queues.map((q) => q!.close()));
   console.log('🛑 BullMQ queues closed');
 }
 
@@ -174,9 +189,9 @@ export async function closeQueues(): Promise<void> {
 
 export async function getQueueHealth(): Promise<Record<string, object>> {
   const [trackingCounts, notifyCounts, payoutCounts] = await Promise.all([
-    trackingPollQueue.getJobCounts(),
-    notificationQueue.getJobCounts(),
-    codPayoutQueue.getJobCounts(),
+    getTrackingPollQueue().getJobCounts(),
+    getNotificationQueue().getJobCounts(),
+    getCodPayoutQueue().getJobCounts(),
   ]);
 
   return {

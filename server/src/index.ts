@@ -1,8 +1,10 @@
+import dotenv from 'dotenv';
+dotenv.config();
+
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
-import dotenv from 'dotenv';
 import redis from './Database/redis';
 import authRouter from './api/auth/routes/auth.routes';
 import usersRouter,{addressRouter} from './api/users/routes/users.routes';
@@ -21,8 +23,7 @@ import { connectMongoDB } from './lib/mongo';
 import { sendSlackAlert } from './lib/slack';
 import { setupSwagger } from './lib/swagger';
 
-// Load environment variables
-dotenv.config();
+// Middlewares start below
 
 const app = express();
 const PORT = process.env.PORT || 3001;
