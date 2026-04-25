@@ -1,7 +1,8 @@
 import { asyncHandler } from "../../../middleware/asyncHandler";
 import pool from "../../../Database/db";
 import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
+import { signTokens } from "../../../lib/jwt";
+import redis from "../../../Database/redis";
 
 const registerUser = asyncHandler(async (req, res) => {
 
@@ -95,19 +96,10 @@ const loginUser = asyncHandler(async (req, res) => {
         });
     }
 
-    const secret = process.env.JWT_SECRET!;
+    const { accessToken, refreshToken } = signTokens(user.id, user.email, user.role);
 
-    const accessToken = jwt.sign(
-        { userId: user.id, phone: user.phone, role: user.role },
-        secret,
-        { expiresIn: "15m" }
-    );
-
-    const refreshToken = jwt.sign(
-        { userId: user.id },
-        secret,
-        { expiresIn: "7d" }
-    );
+    // Store refresh token in Redis (7-day expiry)
+    await redis.set(`refresh_token:${user.id}`, refreshToken, 'EX', 7 * 24 * 60 * 60);
 
     return res.status(200).json({
         success: true,

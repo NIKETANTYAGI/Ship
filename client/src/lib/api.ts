@@ -178,12 +178,6 @@ export async function verifyGoogleToken(idToken: string) {
   return data.data;
 }
 
-export async function loginWithGoogle() {
-  const data = await fetchAPI('/auth/google', {
-    method: 'POST'
-  });
-  return data.data;
-}
 
 export async function getUserProfile() {
   const data = await fetchAPI('/users/profile');
